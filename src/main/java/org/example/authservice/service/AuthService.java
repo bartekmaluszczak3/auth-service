@@ -1,6 +1,7 @@
 package org.example.authservice.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.Claims;
 import org.example.authservice.dto.AuthenticationRequest;
 import org.example.authservice.dto.RegisterRequest;
 import org.example.authservice.dto.AuthenticateResponse;
@@ -27,10 +28,9 @@ import java.util.Optional;
 public class AuthService {
 
     private final UserRepository repository;
-    private final TokenRepository tokenRepository;
+    private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final JwtService jwtService;
 
 
     public AuthenticateResponse register(RegisterRequest registerRequest) throws AuthenticateException {
@@ -43,7 +43,7 @@ public class AuthService {
         var jwtToken = jwtService.generateToken(user);
         var savedUser = repository.save(user);
         var refreshToken = jwtService.generateRefreshToken(user);
-        saveToken(savedUser, jwtToken);
+        jwtService.saveToken(savedUser, jwtToken);
         return AuthenticateResponse.builder()
                 .refreshToken(refreshToken)
                 .accessToken(jwtToken)
@@ -66,23 +66,12 @@ public class AuthService {
         var user = repository.findByEmail(authenticationRequest.getEmail()).orElseThrow();
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
-        revokeAllUserToken(user);
-        saveToken(user, jwtToken);
+        jwtService.revokeAllUserToken(user);
+        jwtService.saveToken(user, jwtToken);
         return AuthenticateResponse.builder()
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
                 .build();
-    }
-
-    private void revokeAllUserToken(User user) {
-        var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getId());
-        if (validUserTokens.isEmpty())
-            return;
-        validUserTokens.forEach(token ->{
-            token.setRevoked(true);
-            token.setExpired(true);
-        });
-        tokenRepository.saveAll(validUserTokens);
     }
 
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -91,13 +80,13 @@ public class AuthService {
             return;
         }
         String refreshToken = authHeader.substring(7);
-        String userEmail = jwtService.extractUsername(refreshToken);
+        String userEmail = jwtService.extractEmail(refreshToken);
         if(userEmail != null){
             var user = this.repository.findByEmail(userEmail).orElseThrow();
             if(jwtService.isTokenValid(refreshToken, user)){
                 var accessToken = jwtService.generateToken(user);
-                revokeAllUserToken(user);
-                saveToken(user, accessToken);
+                jwtService.revokeAllUserToken(user);
+                jwtService.saveToken(user, accessToken);
                 var authResponse = AuthenticateResponse.builder()
                         .accessToken(accessToken)
                         .refreshToken(refreshToken)
@@ -105,15 +94,5 @@ public class AuthService {
                 new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
             }
         }
-    }
-
-    private void saveToken(User user, String jwtToken){
-        var token = Token.builder()
-                .user(user)
-                .token(jwtToken)
-                .expired(false)
-                .revoked(false)
-                .build();
-        tokenRepository.save(token);
     }
 }

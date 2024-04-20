@@ -1,81 +1,76 @@
 package org.example.authservice.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.example.authservice.config.JwtGeneratorConfiguration;
+import org.example.authservice.dto.AuthenticateResponse;
+import org.example.authservice.entity.Token;
+import org.example.authservice.entity.User;
+import org.example.authservice.repostiory.TokenRepository;
+import org.example.authservice.utils.JwtGenerator;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.security.Key;
+import java.io.IOException;
 import java.util.Date;
-import java.util.Map;
-import java.util.function.Function;
+
 
 @Service
 public class JwtService {
 
-    @Value("${application.security.jwt.expiration}")
-    private long jwtExpiration;
-    @Value("${application.security.jwt.refresh-token.expiration}")
-    private long refreshExpiration;
-    @Value("${application.security.jwt.secret-key}")
-    private String secretKey;
+    private final JwtGenerator jwtGenerator;
 
-    public String generateToken(UserDetails userDetails){
-        return generateToken(Map.of(), userDetails, jwtExpiration);
+    private final TokenRepository tokenRepository;
+
+    public JwtService(JwtGeneratorConfiguration jwtGeneratorConfiguration, TokenRepository tokenRepository) {
+        this.tokenRepository = tokenRepository;
+        this.jwtGenerator = new JwtGenerator(jwtGeneratorConfiguration.getJwtExpiration(),
+                jwtGeneratorConfiguration.getRefreshExpiration(), jwtGeneratorConfiguration.getSecretKey());
     }
 
-    public String generateToken(Map<String, Object> extractClaims, UserDetails userDetails, long jwtExpiration){
-        return Jwts
-                .builder()
-                .setClaims(extractClaims)
-                .setSubject(userDetails.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
-                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
-                .compact();
+    public String generateToken(UserDetails userDetails) {
+        return this.jwtGenerator.generateToken(userDetails);
     }
 
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+    public String generateRefreshToken(UserDetails userDetails) {
+        return this.jwtGenerator.generateRefreshToken(userDetails);
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
-    }
-
-    private Claims extractAllClaims(String token) {
-        return Jwts
-                .parserBuilder()
-                .setSigningKey(getSignInKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+    public String extractEmail(String token){
+        return this.jwtGenerator.extractClaim(token, Claims::getSubject);
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
+        final String username = jwtGenerator.extractClaim(token, Claims::getSubject);
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
 
-    public String generateRefreshToken(UserDetails userDetails){
-        return generateToken(Map.of(), userDetails, refreshExpiration);
-    }
-
     private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+        Date expirationDate = jwtGenerator.extractClaim(token, Claims::getExpiration);
+        return expirationDate.before(new Date());
     }
 
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+    public void revokeAllUserToken(User user) {
+        var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getId());
+        if (validUserTokens.isEmpty())
+            return;
+        validUserTokens.forEach(token ->{
+            token.setRevoked(true);
+            token.setExpired(true);
+        });
+        tokenRepository.saveAll(validUserTokens);
     }
 
-    private Key getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
+    public void saveToken(User user, String jwtToken){
+        var token = Token.builder()
+                .user(user)
+                .token(jwtToken)
+                .expired(false)
+                .revoked(false)
+                .build();
+        tokenRepository.save(token);
     }
 }
