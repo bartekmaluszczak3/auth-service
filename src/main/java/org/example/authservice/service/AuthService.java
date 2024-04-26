@@ -1,6 +1,7 @@
 package org.example.authservice.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.example.authservice.dto.AuthenticationRequest;
 import org.example.authservice.dto.AuthenticateResponse;
 import org.example.authservice.entity.Role;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AuthService {
 
@@ -40,6 +42,7 @@ public class AuthService {
         var savedUser = repository.save(user);
         var refreshToken = jwtService.generateRefreshToken(user);
         jwtService.saveToken(savedUser, jwtToken);
+        log.info("User was created");
         return AuthenticateResponse.builder()
                 .refreshToken(refreshToken)
                 .accessToken(jwtToken)
@@ -49,6 +52,7 @@ public class AuthService {
     private void checkIfUserExist(String email) throws AuthenticateException {
         Optional<User> existingUser = repository.findByEmail(email);
         if(existingUser.isPresent()){
+            log.error("User with given email exist");
             throw new AuthenticateException("User with given email exist");
         }
     }

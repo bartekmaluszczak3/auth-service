@@ -1,6 +1,7 @@
 package org.example.authservice.service;
 
 import io.jsonwebtoken.Claims;
+import lombok.extern.slf4j.Slf4j;
 import org.example.authservice.config.JwtGeneratorConfiguration;
 import org.example.authservice.entity.Token;
 import org.example.authservice.entity.User;
@@ -13,6 +14,7 @@ import java.util.Date;
 
 
 @Service
+@Slf4j
 public class JwtService {
 
     private final JwtGenerator jwtGenerator;
@@ -59,7 +61,9 @@ public class JwtService {
             token.setRevoked(true);
             token.setExpired(true);
         });
+
         tokenRepository.saveAll(validUserTokens);
+        log.info("Tokens for user {} were revoked", user.getEmail());
     }
 
     public void saveToken(User user, String jwtToken){
@@ -70,5 +74,6 @@ public class JwtService {
                 .revoked(false)
                 .build();
         tokenRepository.save(token);
+        log.info("Token for user {} was created", user.getEmail());
     }
 }

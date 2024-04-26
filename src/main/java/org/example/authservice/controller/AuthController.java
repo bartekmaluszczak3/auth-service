@@ -1,5 +1,6 @@
 package org.example.authservice.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.authservice.dto.AuthenticationRequest;
 import org.example.authservice.dto.AuthenticateResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,22 +19,26 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
 
     private final AuthService authService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthenticateResponse> register(@RequestBody AuthenticationRequest authenticationRequest) throws AuthenticateException {
+        log.info("Received register request with email {}", authenticationRequest.getEmail());
         return ResponseEntity.ok(authService.register(authenticationRequest));
     }
 
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticateResponse> authenticate(@RequestBody AuthenticationRequest authenticationRequest) throws AuthenticateException {
+        log.info("Received register request with email {}", authenticationRequest.getEmail());
         return ResponseEntity.ok(authService.authenticate(authenticationRequest));
     }
 
     @PostMapping("/refresh-token")
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        log.info("Received refresh token");
         authService.refreshToken(request, response);
     }
 }
