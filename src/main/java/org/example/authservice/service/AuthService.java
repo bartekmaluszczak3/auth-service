@@ -1,12 +1,9 @@
 package org.example.authservice.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.Claims;
 import org.example.authservice.dto.AuthenticationRequest;
-import org.example.authservice.dto.RegisterRequest;
 import org.example.authservice.dto.AuthenticateResponse;
 import org.example.authservice.entity.Role;
-import org.example.authservice.entity.Token;
 import org.example.authservice.entity.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,7 +14,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.example.authservice.repostiory.TokenRepository;
 import org.example.authservice.repostiory.UserRepository;
 
 import java.io.IOException;
@@ -33,11 +29,11 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
 
 
-    public AuthenticateResponse register(RegisterRequest registerRequest) throws AuthenticateException {
-        checkIfUserExist(registerRequest.getEmail());
+    public AuthenticateResponse register(AuthenticationRequest authenticationRequest) throws AuthenticateException {
+        checkIfUserExist(authenticationRequest.getEmail());
         var user = User.builder()
-                .email(registerRequest.getEmail())
-                .password(passwordEncoder.encode(registerRequest.getPassword()))
+                .email(authenticationRequest.getEmail())
+                .password(passwordEncoder.encode(authenticationRequest.getPassword()))
                 .role(Role.USER)
                 .build();
         var jwtToken = jwtService.generateToken(user);
@@ -57,13 +53,15 @@ public class AuthService {
         }
     }
 
-    public AuthenticateResponse authenticate(AuthenticationRequest authenticationRequest){
+    public AuthenticateResponse authenticate(AuthenticationRequest authenticationRequest) throws AuthenticateException {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         authenticationRequest.getEmail(),
                         authenticationRequest.getPassword()
                 ));
-        var user = repository.findByEmail(authenticationRequest.getEmail()).orElseThrow();
+        var user = repository.findByEmail(authenticationRequest.getEmail()).orElseThrow(
+                ()-> new AuthenticateException("Given user is not registered!")
+        );
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
         jwtService.revokeAllUserToken(user);

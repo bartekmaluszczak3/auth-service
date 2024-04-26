@@ -1,7 +1,6 @@
 package org.example.authservice.controller;
 
 import org.example.authservice.dto.AuthenticationRequest;
-import org.example.authservice.dto.RegisterRequest;
 import org.example.authservice.dto.AuthenticateResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,12 +23,12 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthenticateResponse> register(@RequestBody RegisterRequest registerRequest) throws AuthenticateException {
-        return ResponseEntity.ok(authService.register(registerRequest));
+    public ResponseEntity<AuthenticateResponse> register(@RequestBody AuthenticationRequest authenticationRequest) throws AuthenticateException {
+        return ResponseEntity.ok(authService.register(authenticationRequest));
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<AuthenticateResponse> authenticate(@RequestBody AuthenticationRequest authenticationRequest){
+    public ResponseEntity<AuthenticateResponse> authenticate(@RequestBody AuthenticationRequest authenticationRequest) throws AuthenticateException {
         return ResponseEntity.ok(authService.authenticate(authenticationRequest));
     }
 

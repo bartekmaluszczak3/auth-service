@@ -1,20 +1,14 @@
 package org.example.authservice.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.example.authservice.config.JwtGeneratorConfiguration;
-import org.example.authservice.dto.AuthenticateResponse;
 import org.example.authservice.entity.Token;
 import org.example.authservice.entity.User;
 import org.example.authservice.repostiory.TokenRepository;
 import org.example.authservice.utils.JwtGenerator;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.Date;
 
 
@@ -44,6 +38,10 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
+        var tokenEntity = tokenRepository.findByToken(token);
+        if(tokenEntity.isEmpty() || tokenEntity.get().revoked){
+            return false;
+        }
         final String username = jwtGenerator.extractClaim(token, Claims::getSubject);
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
