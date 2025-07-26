@@ -1,6 +1,7 @@
 create table _user(
     id integer PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
+    user_uid VARCHAR(255) unique NOT NULL,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(255)
 );

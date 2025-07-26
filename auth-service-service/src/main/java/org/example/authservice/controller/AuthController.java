@@ -6,13 +6,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.authservice.domain.dto.AuthenticateResponse;
 import org.example.authservice.domain.dto.AuthenticationRequest;
+import org.example.authservice.domain.entity.User;
 import org.example.authservice.exception.AuthenticateException;
 import org.example.authservice.service.AuthService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
@@ -40,5 +38,11 @@ public class AuthController {
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
         log.info("Received refresh token");
         authService.refreshToken(request, response);
+    }
+
+    @PostMapping("/getInfo")
+    public ResponseEntity<User> getInfoAboutUser(@RequestParam(name = "email") String email){
+        log.info("Received get info about user");
+        return ResponseEntity.ok(authService.getInfo(email));
     }
 }

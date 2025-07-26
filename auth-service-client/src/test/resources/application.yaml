@@ -1,0 +1,6 @@
+service:
+  authservice:
+    client:
+      url: http://localhost:8080
+      isSecure: false
+      timeout: "1000ms"

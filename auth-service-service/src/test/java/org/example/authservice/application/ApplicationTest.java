@@ -129,13 +129,15 @@ public class ApplicationTest {
        Assertions.assertFalse(authenticateResponse.getAccessToken().isEmpty());
     }
 
+    @Test
+    void shouldFindUser(){
+        // given
+        String email = "email";
+        var registerUser = registerUser(AuthenticationRequest.builder().email("email").password("password").build());
 
-    private void shouldRevokePreviousToken(String accessToken) {
-        var tokens = container.executeQueryForObjects("SELECT * from token where token ='" + accessToken + "'");
-        Assertions.assertFalse(tokens.isEmpty());
-        Assertions.assertTrue((Boolean) tokens.get(0).get("expired"));
-        Assertions.assertTrue((Boolean) tokens.get(0).get("revoked"));
-        Assertions.assertEquals(tokens.get(0).get("token"), accessToken);
+        // when
+
+
     }
 
     private void shouldCreateUserInDatabase(String email) {

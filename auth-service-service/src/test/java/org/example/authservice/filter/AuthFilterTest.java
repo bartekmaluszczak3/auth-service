@@ -1,4 +1,4 @@
-package org.example.authservice.filter;//package org.example.authservice.filter;
+package org.example.authservice.filter;
 
 import org.example.authservice.Application;
 import org.example.authservice.domain.dto.AuthenticateResponse;

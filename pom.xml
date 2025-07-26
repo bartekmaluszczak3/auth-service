@@ -6,6 +6,7 @@
         <module>auth-service-domain</module>
         <module>auth-service-filter</module>
         <module>auth-service-service</module>
+        <module>auth-service-client</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -25,12 +26,9 @@
         <maven.compiler.target>17</maven.compiler.target>
         <jwt.version>0.11.5</jwt.version>
         <test.containers.version>1.19.6</test.containers.version>
+        <mock.server.version>5.13.0</mock.server.version>
     </properties>
     <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-        </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
@@ -53,12 +51,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

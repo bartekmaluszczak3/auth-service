@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -37,6 +38,7 @@ public class AuthService {
         checkIfUserExist(authenticationRequest.getEmail());
         var user = User.builder()
                 .email(authenticationRequest.getEmail())
+                .userUid(UUID.randomUUID().toString())
                 .password(passwordEncoder.encode(authenticationRequest.getPassword()))
                 .role(Role.USER)
                 .build();
@@ -93,5 +95,9 @@ public class AuthService {
                 new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
             }
         }
+    }
+
+    public User getInfo(String email) {
+        return repository.findByEmail(email).orElseThrow();
     }
 }
