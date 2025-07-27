@@ -40,7 +40,7 @@ public class AuthController {
         authService.refreshToken(request, response);
     }
 
-    @PostMapping("/getInfo")
+    @GetMapping("/getInfo")
     public ResponseEntity<User> getInfoAboutUser(@RequestParam(name = "email") String email){
         log.info("Received get info about user");
         return ResponseEntity.ok(authService.getInfo(email));

@@ -5,12 +5,16 @@ import org.example.authservice.PostgresContainer;
 import org.example.authservice.domain.dto.AuthenticateResponse;
 import org.example.authservice.domain.dto.AuthenticationRequest;
 import org.example.authservice.domain.entity.Role;
+import org.example.authservice.domain.entity.User;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -133,10 +137,24 @@ public class ApplicationTest {
     void shouldFindUser(){
         // given
         String email = "email";
-        var registerUser = registerUser(AuthenticationRequest.builder().email("email").password("password").build());
+        var registerUser = registerUser(AuthenticationRequest.builder().email(email).password("password").build());
+        String header = "Bearer " + registerUser.getAccessToken();
+        String url = "/api/v1/auth/getInfo?email=" + email;
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", header);
+        HttpEntity<String> entity = new HttpEntity<>(headers);
 
         // when
+        ResponseEntity<User> response = testRestTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                User.class
+        );
 
+        // then
+        User user = response.getBody();
+        Assertions.assertEquals(email, user.getEmail());
 
     }
 

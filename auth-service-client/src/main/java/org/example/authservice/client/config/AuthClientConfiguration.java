@@ -15,6 +15,5 @@ import java.time.Duration;
 public class AuthClientConfiguration {
 
     private String url;
-    private boolean isSecure;
     private Duration timeout;
 }

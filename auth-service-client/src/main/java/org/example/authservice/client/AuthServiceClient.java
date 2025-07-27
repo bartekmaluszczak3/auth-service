@@ -35,7 +35,7 @@ public class AuthServiceClient {
             String finalUri = authClientConfiguration.getUrl() + "/api/v1/auth/getInfo?email=" + email;
             HttpRequest httpRequest = HttpRequest.newBuilder()
                     .uri(new URI(finalUri))
-                    .POST(HttpRequest.BodyPublishers.noBody())
+                    .GET()
                     .build();
             HttpResponse<String> send = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             return objectMapper.readValue(send.body(), User.class);
