@@ -29,7 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         final String authHeader = request.getHeader("Authorization");
         if(authHeader == null || !authHeader.startsWith("Bearer ")){
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing Authorization header");
+            filterChain.doFilter(request, response);
             return;
         }
         String jwt = authHeader.substring(7);

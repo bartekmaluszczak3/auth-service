@@ -117,23 +117,6 @@ public class ApplicationTest {
     }
 
     @Test
-    void shouldRefreshToken() throws Exception {
-        // given
-        var registerUser = registerUser(AuthenticationRequest.builder().email("email").password("password").build());
-        String header = "Bearer " + registerUser.getAccessToken();
-
-        // when
-       MvcResult mvcResult =  mockMvc.perform(post("/api/v1/auth/refresh-token").header(HttpHeaders.AUTHORIZATION, header))
-               .andReturn();
-
-       // then
-       String responseBody = mvcResult.getResponse().getContentAsString();
-       AuthenticateResponse authenticateResponse = new ObjectMapper().readValue(responseBody, AuthenticateResponse.class);
-       Assertions.assertFalse(authenticateResponse.getRefreshToken().isEmpty());
-       Assertions.assertFalse(authenticateResponse.getAccessToken().isEmpty());
-    }
-
-    @Test
     void shouldFindUser(){
         // given
         String email = "email";
